@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>計算アプリ</title>
+<style>
+body { font-family: sans-serif; padding: 20px; }
+input { margin: 5px; padding: 5px; }
+button { margin-top: 10px; padding: 8px 12px; }
+</style>
+</head>
+<body>
+
+<h2>計算アプリ</h2>
+
+<label>B: <input type="number" id="B"></label><br>
+<label>S: <input type="number" id="S"></label><br>
+<label>T1: <input type="number" id="T1"></label><br>
+<label>T2: <input type="number" id="T2"></label><br>
+
+<button onclick="calculate()">計算</button>
+
+<h3>結果</h3>
+<div>O1: <span id="O1">-</span></div>
+<div>O2: <span id="O2">-</span></div>
+<div>最終結果: <span id="result">-</span></div>
+
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxZ67cBgq7Kluhj7U1ZqkAB5BOA1rGZQDc8Dd1JkwbOuGt0wCsKxZaPccxQNEWxA9Yc/exec";
+
+function calculate() {
+  const B = Number(document.getElementById("B").value);
+  const S = Number(document.getElementById("S").value);
+  const T1 = Number(document.getElementById("T1").value);
+  const T2 = Number(document.getElementById("T2").value);
+
+  if ([B,S,T1,T2].some(v => isNaN(v))) {
+    alert("すべて入力してください");
+    return;
+  }
+
+  const callbackName = "cb_" + Date.now();
+
+  window[callbackName] = function(data) {
+    const O1 = Number(data.O1);
+    const O2 = Number(data.O2);
+
+    document.getElementById("O1").textContent = O1;
+    document.getElementById("O2").textContent = O2;
+    document.getElementById("result").textContent =
+      S - B + O1 + O2;
+
+    delete window[callbackName];
+    script.remove();
+  };
+
+  const script = document.createElement("script");
+  script.src = `${GAS_URL}?B=${B}&S=${S}&T1=${T1}&T2=${T2}&callback=${callbackName}`;
+  document.body.appendChild(script);
+}
+</script>
+
+</body>
+</html>
