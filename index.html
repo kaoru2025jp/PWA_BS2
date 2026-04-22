@@ -28,7 +28,7 @@ button { margin-top: 10px; padding: 8px 12px; }
 <script>
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxZ67cBgq7Kluhj7U1ZqkAB5BOA1rGZQDc8Dd1JkwbOuGt0wCsKxZaPccxQNEWxA9Yc/exec";
 
-function calculate() {
+async function calculate() {
   const B = Number(document.getElementById("B").value);
   const S = Number(document.getElementById("S").value);
   const T1 = Number(document.getElementById("T1").value);
@@ -39,24 +39,26 @@ function calculate() {
     return;
   }
 
-  const callbackName = "cb_" + Date.now();
+  try {
+    const res = await fetch(GAS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ B, S, T1, T2 })
+    });
 
-  window[callbackName] = function(data) {
-    const O1 = Number(data.O1);
-    const O2 = Number(data.O2);
+    const data = await res.json();
 
-    document.getElementById("O1").textContent = O1;
-    document.getElementById("O2").textContent = O2;
+    document.getElementById("O1").textContent = data.O1;
+    document.getElementById("O2").textContent = data.O2;
+
     document.getElementById("result").textContent =
-      S - B + O1 + O2;
+      S - B + Number(data.O1) + Number(data.O2);
 
-    delete window[callbackName];
-    script.remove();
-  };
-
-  const script = document.createElement("script");
-  script.src = `${GAS_URL}?B=${B}&S=${S}&T1=${T1}&T2=${T2}&callback=${callbackName}`;
-  document.body.appendChild(script);
+  } catch (e) {
+    alert("通信エラー: " + e);
+  }
 }
 </script>
 
