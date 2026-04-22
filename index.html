@@ -2,64 +2,93 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>計算アプリ</title>
+
 <style>
-body { font-family: sans-serif; padding: 20px; }
-input { margin: 5px; padding: 5px; }
-button { margin-top: 10px; padding: 8px 12px; }
+body {
+  font-family: sans-serif;
+  padding: 15px;
+  max-width: 500px;
+  margin: auto;
+}
+
+h2 { text-align: center; }
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+}
+
+.result {
+  margin-top: 20px;
+  font-size: 18px;
+}
 </style>
 </head>
 <body>
 
 <h2>計算アプリ</h2>
 
-<label>B: <input type="number" id="B"></label><br>
-<label>S: <input type="number" id="S"></label><br>
-<label>T1: <input type="number" id="T1"></label><br>
-<label>T2: <input type="number" id="T2"></label><br>
+<form id="form">
+  <input type="number" name="B" placeholder="B">
+  <input type="number" name="S" placeholder="S">
+  <input type="number" name="T1" placeholder="T1">
+  <input type="number" name="T2" placeholder="T2">
 
-<button onclick="calculate()">計算</button>
+  <button type="submit">計算</button>
+</form>
 
-<h3>結果</h3>
-<div>O1: <span id="O1">-</span></div>
-<div>O2: <span id="O2">-</span></div>
-<div>最終結果: <span id="result">-</span></div>
+<div class="result">
+  <div>O1: <span id="O1">-</span></div>
+  <div>O2: <span id="O2">-</span></div>
+  <div>結果: <span id="result">-</span></div>
+</div>
+
+<iframe name="hiddenFrame" style="display:none;"></iframe>
 
 <script>
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxZ67cBgq7Kluhj7U1ZqkAB5BOA1rGZQDc8Dd1JkwbOuGt0wCsKxZaPccxQNEWxA9Yc/exec";
 
-async function calculate() {
-  const B = Number(document.getElementById("B").value);
-  const S = Number(document.getElementById("S").value);
-  const T1 = Number(document.getElementById("T1").value);
-  const T2 = Number(document.getElementById("T2").value);
+document.getElementById("form").onsubmit = function(e) {
+  e.preventDefault();
+
+  const formData = new FormData(this);
+
+  const B = Number(formData.get("B"));
+  const S = Number(formData.get("S"));
+  const T1 = Number(formData.get("T1"));
+  const T2 = Number(formData.get("T2"));
 
   if ([B,S,T1,T2].some(v => isNaN(v))) {
     alert("すべて入力してください");
     return;
   }
 
-  try {
-    const res = await fetch(GAS_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ B, S, T1, T2 })
-    });
-
-    const data = await res.json();
-
+  fetch(GAS_URL, {
+    method: "POST",
+    body: JSON.stringify({ B, S, T1, T2 })
+  })
+  .then(res => res.json())
+  .then(data => {
     document.getElementById("O1").textContent = data.O1;
     document.getElementById("O2").textContent = data.O2;
 
     document.getElementById("result").textContent =
       S - B + Number(data.O1) + Number(data.O2);
-
-  } catch (e) {
-    alert("通信エラー: " + e);
-  }
-}
+  })
+  .catch(() => {
+    alert("通信エラー（CORS制限の可能性）");
+  });
+};
 </script>
 
 </body>
