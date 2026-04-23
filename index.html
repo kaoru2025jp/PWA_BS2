@@ -3,81 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>貸借対照表計算</title>
+<title>PWA 計算UI</title>
+
 <style>
-body { font-family: sans-serif; padding: 20px; }
-input { margin: 5px; }
-table { border-collapse: collapse; margin-top: 20px; }
-td, th { border: 1px solid #333; padding: 8px; }
+body {
+  font-family: sans-serif;
+  max-width: 500px;
+  margin: auto;
+  padding: 16px;
+}
+
+h2 {
+  text-align: center;
+}
+
+input, button {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  font-size: 16px;
+}
+
+.card {
+  margin-top: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
 </style>
 </head>
+
 <body>
 
-<h2>データ入力</h2>
+<h2>計算アプリ（PWA35）</h2>
 
-B: <input id="B" type="number"><br>
-S: <input id="S" type="number"><br>
-T1: <input id="T1" type="number"><br>
-T2: <input id="T2" type="number"><br>
+<form id="form">
+  <input type="number" name="B" placeholder="B（入力値）" required>
+  <input type="number" name="S" placeholder="S（入力値）" required>
+  <input type="number" name="T1" placeholder="T1" required>
+  <input type="number" name="T2" placeholder="T2" required>
 
+  <button type="submit">計算</button>
+</form>
 
-<button onclick="sendData()">計算</button>
-
-<h2>結果</h2>
-<div id="result"></div>
+<div class="card">
+  <div>base: <span id="base">-</span></div>
+  <div>O1: <span id="O1">-</span></div>
+  <div>O2: <span id="O2">-</span></div>
+  <hr>
+  <div>result: <span id="result">-</span></div>
+</div>
 
 <script>
-async function sendData() {
+const GAS_URL = "あなたのGAS URL";
 
-  const B = Number(document.getElementById("B").value);
-  const S = Number(document.getElementById("S").value);
-  const T1 = Number(document.getElementById("T1").value);
-  const T2 = Number(document.getElementById("T2").value);
-  
+document.getElementById("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-  
+  const form = new FormData(e.target);
 
-  const res = await fetch("https://script.google.com/macros/s/AKfycbwA0ems8Cr7BEGCGZerZfPWC1_w1qqmyjGol70WjNeEhun6IAezCT26A7rRZBooh5ZF/exec", {
-    method: "POST",
-    body: JSON.stringify({ B,S,T1,T2 })
-  });
+  const payload = {
+    B: Number(form.get("B")),
+    S: Number(form.get("S")),
+    T1: Number(form.get("T1")),
+    T2: Number(form.get("T2"))
+  };
 
-  const data = await res.json();
+  // 入力チェック
+  if (Object.values(payload).some(v => isNaN(v))) {
+    alert("入力エラー");
+    return;
+  }
 
-  const O1 = data.O1;
-  const O2 = data.O2;
+  try {
+    const res = await fetch(GAS_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
 
-  const flowAssets = O1;
-  const fixedAssets = Math.max(B - O1, 0);
+    const data = await res.json();
 
-  const flowLiabilities = O2;
-  const capital = Math.max(B - O2, 0);
+    // GASから返ってくる想定：
+    // base, O1, O2, result
 
-  const T3 = (fixedAssets / O);
-  const T4 = (capital / O);
+    document.getElementById("base").textContent = data.base;
+    document.getElementById("O1").textContent = data.O1;
+    document.getElementById("O2").textContent = data.O2;
+    document.getElementById("result").textContent = data.result;
 
-  document.getElementById("result").innerHTML = `
-    <h3>貸借対照表</h3>
-    <table>
-      <tr>
-        <th>借方</th>
-        <th>貸方</th>
-      </tr>
-      <tr>
-        <td>流動資産: ${flowAssets.toFixed(2)}</td>
-        <td>流動負債: ${flowLiabilities.toFixed(2)}</td>
-      </tr>
-      <tr>
-        <td>固定資産: ${fixedAssets.toFixed(2)}</td>
-        <td>資本金: ${capital.toFixed(2)}</td>
-      </tr>
-    </table>
-
-    <h3>指標</h3>
-    T3: ${T3.toFixed(3)}<br>
-    T4: ${T4.toFixed(3)}
-  `;
-}
+  } catch (err) {
+    alert("通信エラー");
+  }
+});
 </script>
 
 </body>
