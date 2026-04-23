@@ -17,8 +17,8 @@ td, th { border: 1px solid #333; padding: 8px; }
 
 B: <input id="B" type="number"><br>
 S: <input id="S" type="number"><br>
-T1: <input id="O" type="number"><br>
-T2: <input id="r1" type="number" step="0.01"><br>
+T1: <input id="T1" type="number"><br>
+T2: <input id="T2" type="number"><br>
 
 
 <button onclick="sendData()">計算</button>
@@ -31,8 +31,8 @@ async function sendData() {
 
   const B = Number(document.getElementById("B").value);
   const S = Number(document.getElementById("S").value);
-  const T1 = Number(document.getElementById("O").value);
-  const T2 = Number(document.getElementById("r1").value);
+  const T1 = Number(document.getElementById("T1").value);
+  const T2 = Number(document.getElementById("T2").value);
   
 
   
