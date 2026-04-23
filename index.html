@@ -3,92 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>計算アプリ</title>
-
+<title>貸借対照表計算</title>
 <style>
-body {
-  font-family: sans-serif;
-  padding: 15px;
-  max-width: 500px;
-  margin: auto;
-}
-
-h2 { text-align: center; }
-
-input {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  font-size: 16px;
-}
-
-button {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
-}
-
-.result {
-  margin-top: 20px;
-  font-size: 18px;
-}
+body { font-family: sans-serif; padding: 20px; }
+input { margin: 5px; }
+table { border-collapse: collapse; margin-top: 20px; }
+td, th { border: 1px solid #333; padding: 8px; }
 </style>
 </head>
 <body>
 
-<h2>計算アプリ</h2>
+<h2>データ入力</h2>
 
-<form id="form">
-  <input type="number" name="B" placeholder="B">
-  <input type="number" name="S" placeholder="S">
-  <input type="number" name="T1" placeholder="T1">
-  <input type="number" name="T2" placeholder="T2">
+B: <input id="B" type="number"><br>
+S: <input id="S" type="number"><br>
+T1: <input id="O" type="number"><br>
+T2: <input id="r1" type="number" step="0.01"><br>
 
-  <button type="submit">計算</button>
-</form>
 
-<div class="result">
-  <div>O1: <span id="O1">-</span></div>
-  <div>O2: <span id="O2">-</span></div>
-  <div>結果: <span id="result">-</span></div>
-</div>
+<button onclick="sendData()">計算</button>
 
-<iframe name="hiddenFrame" style="display:none;"></iframe>
+<h2>結果</h2>
+<div id="result"></div>
 
 <script>
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxZ67cBgq7Kluhj7U1ZqkAB5BOA1rGZQDc8Dd1JkwbOuGt0wCsKxZaPccxQNEWxA9Yc/exec";
+async function sendData() {
 
-document.getElementById("form").onsubmit = function(e) {
-  e.preventDefault();
+  const B = Number(document.getElementById("B").value);
+  const S = Number(document.getElementById("S").value);
+  const T1 = Number(document.getElementById("O").value);
+  const T2 = Number(document.getElementById("r1").value);
+  
 
-  const formData = new FormData(this);
+  
 
-  const B = Number(formData.get("B"));
-  const S = Number(formData.get("S"));
-  const T1 = Number(formData.get("T1"));
-  const T2 = Number(formData.get("T2"));
-
-  if ([B,S,T1,T2].some(v => isNaN(v))) {
-    alert("すべて入力してください");
-    return;
-  }
-
-  fetch(GAS_URL, {
+  const res = await fetch("", {
     method: "POST",
-    body: JSON.stringify({ B, S, T1, T2 })
-  })
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById("O1").textContent = data.O1;
-    document.getElementById("O2").textContent = data.O2;
-
-    document.getElementById("result").textContent =
-      S - B + Number(data.O1) + Number(data.O2);
-  })
-  .catch(() => {
-    alert("通信エラー（CORS制限の可能性）");
+    body: JSON.stringify({ B,S,T1,T2 })
   });
-};
+
+  const data = await res.json();
+
+  const O1 = data.O1;
+  const O2 = data.O2;
+
+  const flowAssets = O1;
+  const fixedAssets = Math.max(B - O1, 0);
+
+  const flowLiabilities = O2;
+  const capital = Math.max(B - O2, 0);
+
+  const T3 = (fixedAssets / O);
+  const T4 = (capital / O);
+
+  document.getElementById("result").innerHTML = `
+    <h3>貸借対照表</h3>
+    <table>
+      <tr>
+        <th>借方</th>
+        <th>貸方</th>
+      </tr>
+      <tr>
+        <td>流動資産: ${flowAssets.toFixed(2)}</td>
+        <td>流動負債: ${flowLiabilities.toFixed(2)}</td>
+      </tr>
+      <tr>
+        <td>固定資産: ${fixedAssets.toFixed(2)}</td>
+        <td>資本金: ${capital.toFixed(2)}</td>
+      </tr>
+    </table>
+
+    <h3>指標</h3>
+    T3: ${T1.toFixed(3)}<br>
+    T4: ${T2.toFixed(3)}
+  `;
+}
 </script>
 
 </body>
