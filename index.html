@@ -82,6 +82,21 @@ document.getElementById("form").addEventListener("submit", async (e) => {
 
     const data = await res.json();
 
+    
+
+const S = payload.S;
+const B = payload.B;
+
+const O1 = Number(data.O1);
+const O2 = Number(data.O2);
+
+// ★ここが本来必要なロジック
+const result = S - B + O1 + O2;
+
+document.getElementById("base").textContent = B - S;
+document.getElementById("O1").textContent = O1;
+document.getElementById("O2").textContent = O2;
+document.getElementById("result").textContent = result;
     // GASから返ってくる想定：
     // base, O1, O2, result
 
