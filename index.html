@@ -46,7 +46,6 @@ input, button {
 </form>
 
 <div class="card">
-  <div>base: <span id="base">-</span></div>
   <div>O1: <span id="O1">-</span></div>
   <div>O2: <span id="O2">-</span></div>
   <hr>
@@ -54,22 +53,19 @@ input, button {
 </div>
 
 <script>
-const GAS_URL = "https://script.google.com/macros/s/AKfycbz8tl0iINlHPSYINHOQpF274kQ8mEiku3XO_g3AtOXsACCzldUJyIA5eZ8Al_UTr41J/exec";
+const GAS_URL = "YOUR_GAS_URL";
 
 document.getElementById("form").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const form = new FormData(e.target);
 
-  const payload = {
-    B: Number(form.get("B")),
-    S: Number(form.get("S")),
-    T1: Number(form.get("T1")),
-    T2: Number(form.get("T2"))
-  };
+  const B = Number(form.get("B"));
+  const S = Number(form.get("S"));
+  const T1 = Number(form.get("T1"));
+  const T2 = Number(form.get("T2"));
 
-  // 入力チェック
-  if (Object.values(payload).some(v => isNaN(v))) {
+  if (![B, S, T1, T2].every(Number.isFinite)) {
     alert("入力エラー");
     return;
   }
@@ -77,33 +73,28 @@ document.getElementById("form").addEventListener("submit", async (e) => {
   try {
     const res = await fetch(GAS_URL, {
       method: "POST",
-      body: JSON.stringify(payload)
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ B, S, T1, T2 })
     });
 
     const data = await res.json();
 
-    
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
 
-const S = payload.S;
-const B = payload.B;
+    const O1 = Number(data.O1);
+    const O2 = Number(data.O2);
 
-const O1 = Number(data.O1);
-const O2 = Number(data.O2);
+    // ★成功パターン：ここで完結させる
+    const result = (S - B) + O1 + O2;
 
-// ★ここが本来必要なロジック
-const result = S - B + O1 + O2;
-
-document.getElementById("base").textContent = B - S;
-document.getElementById("O1").textContent = O1;
-document.getElementById("O2").textContent = O2;
-document.getElementById("result").textContent = result;
-    // GASから返ってくる想定：
-    // base, O1, O2, result
-
-    document.getElementById("base").textContent = data.base;
-    document.getElementById("O1").textContent = data.O1;
-    document.getElementById("O2").textContent = data.O2;
-    document.getElementById("result").textContent = data.result;
+    document.getElementById("O1").textContent = O1;
+    document.getElementById("O2").textContent = O2;
+    document.getElementById("result").textContent = result;
 
   } catch (err) {
     alert("通信エラー");
